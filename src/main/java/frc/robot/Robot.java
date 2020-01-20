@@ -26,31 +26,49 @@ public class Robot extends TimedRobot {
    */
   RobotContainer robot;
   Command m_autonomousCommand;
-
+  
   @Override
   public void robotInit() {
-    robot = new RobotContainer();
-    m_autonomousCommand = robot.getAutonomousCommand();
+    robot = new RobotContainer();    
   }
 
   @Override
   public void robotPeriodic() {
-
+    // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
+    // commands, running already-scheduled commands, removing finished or interrupted commands,
+    // and running subsystem periodic() methods.  This must be called from the robot's periodic
+    // block in order for anything in the Command-based framework to work.
+    var scheduler = CommandScheduler.getInstance();
+    scheduler.enable();
+    scheduler.run();
+    //System.out.println("Starting the scheduler!");
   }
 
   @Override
   public void autonomousInit() {
+    System.out.println("Autonomous init");
     // This is like the only part im unsure about
-    m_autonomousCommand.schedule(true);
+    m_autonomousCommand = robot.getAutonomousCommand();
+    m_autonomousCommand.execute();
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.schedule();
+    }
   }
 
   @Override
   public void autonomousPeriodic() {
-    CommandScheduler.getInstance().run();
+    //CommandScheduler.getInstance().run();
   }
 
   @Override
   public void teleopInit() {
+    // This makes sure that the autonomous stops running when
+    // teleop starts running. If you want the autonomous to
+    // continue until interrupted by another command, remove
+    // this line or comment it out.
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
+    }
   }
 
   @Override
@@ -64,5 +82,4 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
   }
-
 }

@@ -24,7 +24,7 @@ public class RobotContainer {
     Joystick driver = new Joystick(0);
 
     public RobotContainer() {
-
+        System.out.println("Created robot container");
     }
 
     public ShiftingWCD getDrive() {
@@ -32,6 +32,7 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
+        System.out.println("Got auto command");
         var autoVoltageConstraint = new DifferentialDriveVoltageConstraint(
                 new SimpleMotorFeedforward(Constants.ksVolts, Units.inchesToMeters(Constants.kvVoltSecondsPerInch),
                         Units.inchesToMeters(Constants.kaVoltSecondsSquaredPerInch)),
@@ -62,7 +63,5 @@ public class RobotContainer {
                 sunKist::tankDriveVolts, sunKist);
 
         return ramseteCommand.andThen(() -> sunKist.tankDriveVolts(0, 0));
-
     }
-
 }

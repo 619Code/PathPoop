@@ -79,12 +79,15 @@ public class ShiftingWCD extends SubsystemBase {
     brakeMode(rightMaster);
     brakeMode(rightSlave0);
     brakeMode(rightSlave1);
+
+    //drive.setMaxOutput(1);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
   private void initDrive() {
     drive = new DifferentialDrive(leftMaster, rightMaster);
+    drive.setSafetyEnabled(false);
   }
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
