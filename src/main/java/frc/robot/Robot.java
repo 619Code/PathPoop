@@ -8,8 +8,10 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.command.Scheduler;
+import frc.paths.ForwardSimple4;
+import frc.robot.drive.PathFollower;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -24,13 +26,11 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
-  RobotContainer robot;
   Command m_autonomousCommand;
 
   @Override
   public void robotInit() {
-    robot = new RobotContainer();
-    m_autonomousCommand = robot.getAutonomousCommand();
+    m_autonomousCommand = new PathFollower(new ForwardSimple4());
   }
 
   @Override
@@ -40,13 +40,12 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
-    // This is like the only part im unsure about
-    m_autonomousCommand.schedule(true);
+    m_autonomousCommand.start();
   }
 
   @Override
   public void autonomousPeriodic() {
-    CommandScheduler.getInstance().run();
+    Scheduler.getInstance().run();
   }
 
   @Override

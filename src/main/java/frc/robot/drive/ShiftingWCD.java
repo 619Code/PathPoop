@@ -15,27 +15,16 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.geometry.Pose2d;
-import edu.wpi.first.wpilibj.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
-import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
-import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
-import edu.wpi.first.wpilibj.util.Units;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.numbers.Constants;
-import frc.robot.numbers.RobotMap;
 
-public class ShiftingWCD extends SubsystemBase {
+public class ShiftingWCD extends Subsystem {
 
   CANSparkMax leftMaster, leftSlave0, leftSlave1, rightMaster, rightSlave0, rightSlave1;
   DifferentialDrive drive;
   DoubleSolenoid shifter;
 
-  // PathWeaver
-  public final DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(
-      Units.inchesToMeters(Constants.kTrackwidthInches));
-  final DifferentialDriveOdometry odometry;
   AHRS navx;
   CANEncoder leftEncoder, rightEncoder;
 
@@ -45,7 +34,6 @@ public class ShiftingWCD extends SubsystemBase {
     initMotors();
     initDrive();
     initSensors();
-    odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(getHeading()));
     // shifter = new DoubleSolenoid(0, 1);
   }
 
@@ -79,14 +67,13 @@ public class ShiftingWCD extends SubsystemBase {
     brakeMode(rightMaster);
     brakeMode(rightSlave0);
     brakeMode(rightSlave1);
-  }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  }
 
   private void initDrive() {
     drive = new DifferentialDrive(leftMaster, rightMaster);
+    drive.setSafetyEnabled(false);
   }
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
 
   private void initSensors() {
     navx = new AHRS(SPI.Port.kMXP);
@@ -97,59 +84,49 @@ public class ShiftingWCD extends SubsystemBase {
     resetEncoders();
   }
 
-  private void resetGyro() {
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  public void resetGyro() {
     navx.reset();
   }
 
-  private void resetEncoders() {
+  public void resetEncoders() {
     leftEncoder.setPosition(0);
     rightEncoder.setPosition(0);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
   public double getLeftEncoderInches() {
-    return (RobotMap.WHEEL_DIAMETER * Math.PI * (leftEncoder.getPosition() / RobotMap.ENCODER_TICK_PER_REV));
+    return (Constants.WHEEL_DIAMETER * Math.PI * (leftEncoder.getPosition() / Constants.ENCODER_TICK_PER_REV));
   }
 
   public double getRightEncoderInches() {
-    return (RobotMap.WHEEL_DIAMETER * Math.PI * (rightEncoder.getPosition() / RobotMap.ENCODER_TICK_PER_REV));
+    return (Constants.WHEEL_DIAMETER * Math.PI * (rightEncoder.getPosition() / Constants.ENCODER_TICK_PER_REV));
+  }
+
+  public double getLeftEncoderFeet() {
+    return getLeftEncoderInches() / 12.0;
+  }
+
+  public double getRightEncoderFeet() {
+    return getRightEncoderInches() / 12.0;
   }
 
   public double getLeftEncoderVelocity() {
-    return ((leftEncoder.getVelocity() / Constants.DRIVE_RATIO) * RobotMap.WHEEL_DIAMETER) / 60;
+    return ((leftEncoder.getVelocity() / Constants.DRIVE_RATIO) * Constants.WHEEL_DIAMETER) / 60;
   }
 
   public double getRightEncoderVelocity() {
-    return ((rightEncoder.getVelocity() / Constants.DRIVE_RATIO) * RobotMap.WHEEL_DIAMETER) / 60;
+    return ((rightEncoder.getVelocity() / Constants.DRIVE_RATIO) * Constants.WHEEL_DIAMETER) / 60;
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // Pathweaver
-  public Pose2d getPose() {
-    return odometry.getPoseMeters();
+  public double getHeadingDegrees() {
+    return navx.getAngle();
   }
 
-  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
-    return new DifferentialDriveWheelSpeeds(Units.inchesToMeters(getLeftEncoderVelocity()),
-        Units.inchesToMeters(getRightEncoderVelocity()));
-  }
-
-  public void resetOdometry(Pose2d pose) {
-    resetEncoders();
-    odometry.resetPosition(pose, Rotation2d.fromDegrees(getHeading()));
-  }
-
-  public void tankDriveVolts(double leftVolts, double rightVolts) {
-    leftMaster.setVoltage(leftVolts);
-    rightMaster.setVoltage(-rightVolts);
-  }
-
-  public double getAverageEncoderDistance() {
-    return (getLeftEncoderInches() + getRightEncoderInches()) / 2.0;
-  }
-
-  public double getHeading() {
-    return Math.IEEEremainder(navx.getAngle(), 360) * (Constants.kGyroReversed ? -1.0 : 1.0);
+  public double getHeadingRadians() {
+    return (getHeadingDegrees() * Math.PI) / 180.0;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,12 +139,19 @@ public class ShiftingWCD extends SubsystemBase {
     drive.arcadeDrive(speed, rotation);
   }
 
+  public void setRawPercentOutput(double left, double right) {
+    drive.tankDrive(left, right);
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
   @Override
   public void periodic() {
-    odometry.update(Rotation2d.fromDegrees(getHeading()), Units.inchesToMeters(getLeftEncoderInches()),
-        Units.inchesToMeters(getRightEncoderInches()));
+  }
+
+  @Override
+  protected void initDefaultCommand() {
+
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,4 +159,5 @@ public class ShiftingWCD extends SubsystemBase {
   private void brakeMode(CANSparkMax mc) {
     mc.setIdleMode(IdleMode.kBrake);
   }
+
 }
