@@ -4,19 +4,22 @@ import com.team2363.commands.HelixFollower;
 import com.team2363.controller.PIDController;
 import com.team319.trajectory.Path;
 
+import frc.robot.Robot;
 import frc.robot.numbers.Constants;
 
 public class PathFollower extends HelixFollower {
 
-    private ShiftingWCD sunkist = new ShiftingWCD();
-
+    static ShiftingWCD sunkist;
     // These are the 2 PID controllers that will handle error for your total travel
     // distance and heading
-    private PIDController headingController = new PIDController(15, 0, 0, 0.001);
-    private PIDController distanceController = new PIDController(10, 0, 0, 0.001);
+    private PIDController headingController = new PIDController(Constants.HEADING_P, Constants.HEADING_I,
+            Constants.HEADING_D, 0.001);
+    private PIDController distanceController = new PIDController(Constants.DISTANCE_P, Constants.DISTANCE_I,
+            Constants.DISTANCE_D, 0.001);
 
     public PathFollower(Path path) {
         super(path);
+        sunkist = Robot.getDrivetrain();
         // Make sure to require your subsystem so you don't have conflicting commands
         requires(sunkist);
     }
@@ -53,7 +56,7 @@ public class PathFollower extends HelixFollower {
     public double getCurrentHeading() {
         // Here we need to return the current heading of the robot in RADIANS (positive
         // counter-clockwise).
-        return Math.toRadians(sunkist.getHeadingRadians());
+        return Math.toRadians(sunkist.getHeadingDegrees());
     }
 
     @Override

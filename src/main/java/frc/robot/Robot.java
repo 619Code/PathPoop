@@ -7,11 +7,15 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
-import frc.paths.ForwardSimple4;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.paths.TestPath;
+import frc.paths.TurnCalib;
 import frc.robot.drive.PathFollower;
+import frc.robot.drive.ShiftingWCD;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -26,20 +30,41 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used
    * for any initialization code.
    */
+  static ShiftingWCD drive;
+  Joystick test;
   Command m_autonomousCommand;
 
   @Override
   public void robotInit() {
-    m_autonomousCommand = new PathFollower(new ForwardSimple4());
+    drive = new ShiftingWCD();
+    test = new Joystick(0);
+    m_autonomousCommand = new PathFollower(new TestPath());
+  }
+
+  public static ShiftingWCD getDrivetrain() {
+    return drive;
   }
 
   @Override
   public void robotPeriodic() {
+    SmartDashboard.putNumber("Heading: ", drive.getHeadingDegrees());
+    SmartDashboard.putNumber("Left Distance: ", drive.getLeftEncoderFeet());
+    SmartDashboard.putNumber("Right Distance: ", drive.getRightEncoderFeet());
+
+    // double P = SmartDashboard.getNumber("P", Constants.DISTANCE_P);
+    // double I = SmartDashboard.getNumber("I", Constants.DISTANCE_I);
+    // double D = SmartDashboard.getNumber("D", Constants.DISTANCE_D);
+
+    // Constants.DISTANCE_P = P;
+    // Constants.DISTANCE_I = I;
+    // Constants.DISTANCE_D = D;
 
   }
 
   @Override
   public void autonomousInit() {
+    drive.resetEncoders();
+    drive.resetGyro();
     m_autonomousCommand.start();
   }
 
@@ -50,10 +75,13 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
+    drive.resetEncoders();
+    drive.resetGyro();
   }
 
   @Override
   public void teleopPeriodic() {
+    drive.arcade(test.getRawAxis(1), -test.getRawAxis(4));
   }
 
   @Override

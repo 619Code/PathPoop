@@ -79,7 +79,6 @@ public class ShiftingWCD extends Subsystem {
     navx = new AHRS(SPI.Port.kMXP);
     leftEncoder = leftMaster.getEncoder();
     rightEncoder = rightMaster.getEncoder();
-
     resetGyro();
     resetEncoders();
   }
@@ -98,11 +97,15 @@ public class ShiftingWCD extends Subsystem {
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
   public double getLeftEncoderInches() {
-    return (Constants.WHEEL_DIAMETER * Math.PI * (leftEncoder.getPosition() / Constants.ENCODER_TICK_PER_REV));
+    // return -(Constants.WHEEL_DIAMETER * Math.PI * (leftEncoder.getPosition() /
+    // Constants.ENCODER_TICK_PER_REV));
+    return -leftEncoder.getPosition() * 1.7;
   }
 
   public double getRightEncoderInches() {
-    return (Constants.WHEEL_DIAMETER * Math.PI * (rightEncoder.getPosition() / Constants.ENCODER_TICK_PER_REV));
+    // return (Constants.WHEEL_DIAMETER * Math.PI * (rightEncoder.getPosition() /
+    // Constants.ENCODER_TICK_PER_REV));
+    return rightEncoder.getPosition() * 1.7;
   }
 
   public double getLeftEncoderFeet() {
@@ -113,20 +116,22 @@ public class ShiftingWCD extends Subsystem {
     return getRightEncoderInches() / 12.0;
   }
 
-  public double getLeftEncoderVelocity() {
-    return ((leftEncoder.getVelocity() / Constants.DRIVE_RATIO) * Constants.WHEEL_DIAMETER) / 60;
-  }
+  // public double getLeftEncoderVelocity() {
+  // return ((leftEncoder.getVelocity() / Constants.DRIVE_RATIO) *
+  // Constants.WHEEL_DIAMETER) / 60;
+  // }
 
-  public double getRightEncoderVelocity() {
-    return ((rightEncoder.getVelocity() / Constants.DRIVE_RATIO) * Constants.WHEEL_DIAMETER) / 60;
-  }
+  // public double getRightEncoderVelocity() {
+  // return -((rightEncoder.getVelocity() / Constants.DRIVE_RATIO) *
+  // Constants.WHEEL_DIAMETER) / 60;
+  // }
 
   public double getHeadingDegrees() {
-    return navx.getAngle();
+    return -navx.getAngle();
   }
 
   public double getHeadingRadians() {
-    return (getHeadingDegrees() * Math.PI) / 180.0;
+    return Math.toRadians(getHeadingDegrees());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +145,7 @@ public class ShiftingWCD extends Subsystem {
   }
 
   public void setRawPercentOutput(double left, double right) {
-    drive.tankDrive(left, right);
+    drive.tankDrive(-left, -right);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
